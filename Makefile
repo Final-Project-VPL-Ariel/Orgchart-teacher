@@ -8,7 +8,7 @@ CXXFLAGS=-std=$(CXXVERSION) -Werror -Wsign-conversion -I$(SOURCE_PATH)
 TIDY_FLAGS=-extra-arg=-std=$(CXXVERSION) -checks=bugprone-*,clang-analyzer-*,cppcoreguidelines-*,performance-*,portability-*,readability-*,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-owning-memory --warnings-as-errors=*
 VALGRIND_FLAGS=-v --leak-check=full --show-leak-kinds=all  --error-exitcode=99
 
-# Add debugging flagss
+# Add debugging flags
 DEBUG_FLAGS=-g -O0
 
 SOURCES=$(wildcard $(SOURCE_PATH)/*.cpp)
@@ -19,6 +19,9 @@ run: test
 
 test: TestRunner.o StudentTest1.o StudentTest2.o $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $(DEBUG_FLAGS) $^ -o $@
+
+test_debug: MainStudentTest.o $(OBJECTS)
+	$(CXX) $(CXXFLAGS) $(DEBUG_FLAGS) $^ -o $@ -L/doctest -ldoctest
 
 %.o: %.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) $(DEBUG_FLAGS) --compile $< -o $@
@@ -41,8 +44,8 @@ valgrind: test
 	valgrind --tool=memcheck $(VALGRIND_FLAGS) ./test 2>&1 | { egrep "lost| at " || true; }
 
 # New target for debugging
-debug: test
-	gdb ./test
+debug: test_debug
+	gdb ./test_debug
 
 clean:
 	rm -f $(OBJECTS) *.o test* 
